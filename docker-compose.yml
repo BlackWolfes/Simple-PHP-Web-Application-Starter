@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    container_name: php-webapp-container
+    ports:
+      - "8080:80"
+    environment:
+      # Configuración de Base de Datos
+      - DB_HOST=192.168.23.136
+      - DB_PORT=3306
+      - DB_NAME=webapp_db
+      - DB_USER=webapp_user
+      - DB_PASS=${DB_PASS:-your_secure_password}
+      
+      # Configuración de Aplicación
+      - APP_NAME=Simple PHP Web App
+      - APP_URL=http://192.168.23.136:8080
+      
+      # Configuración de Seguridad
+      - CSRF_SECRET=${CSRF_SECRET:-change_this_in_production_min_32_chars}
+      - PASSWORD_PEPPER=${PASSWORD_PEPPER:-change_this_in_production_min_32_chars}
+    
+    volumes:
+      # Volumen persistente para logs
+      - ./logs:/var/www/html/logs
+      # Volumen para uploads (si se necesita)
+      - ./uploads:/var/www/html/uploads
+    
+    extra_hosts:
+      # Mapeo de host para conectividad con servidor MySQL
+      - "database:192.168.23.136"
+      - "mysql-server:192.168.23.136"
+    
+    restart: unless-stopped
+    
+    # Configuración de red para conectividad externa
+    networks:
+      - webapp-network
+
+networks:
+  webapp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

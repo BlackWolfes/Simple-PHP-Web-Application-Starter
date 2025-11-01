@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    container_name: php-webapp-container
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    environment:
+      # Configuración de Base de Datos - MySQL Local
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=webapp_db
+      - DB_USER=webapp_user
+      - DB_PASS=${DB_PASS:-your_secure_password_here}
+      
+      # Configuración de Aplicación
+      - APP_NAME=Simple PHP Web App
+      - APP_URL=http://localhost:8080
+      
+      # Configuración de Seguridad
+      - CSRF_SECRET=${CSRF_SECRET:-change_this_in_production_min_32_chars}
+      - PASSWORD_PEPPER=${PASSWORD_PEPPER:-change_this_in_production_min_32_chars}
+    
+    volumes:
+      # Volumen persistente para logs
+      - ./logs:/var/www/html/logs
+      # Volumen para uploads (si se necesita)
+      - ./uploads:/var/www/html/uploads
+    
+    restart: unless-stopped
+    networks:
+      - webapp-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-webapp
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secure_password}
+      MYSQL_DATABASE: webapp_db
+      MYSQL_USER: webapp_user
+      MYSQL_PASSWORD: ${DB_PASS:-your_secure_password_here}
+    ports:
+      - "3306:3306"
+    volumes:
+      # Volumen persistente para datos MySQL
+      - mysql_data:/var/lib/mysql
+      # Inicializar con schema si existe
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    restart: unless-stopped
+    networks:
+      - webapp-network
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  webapp-network:
+    driver: bridge
