@@ -18,12 +18,16 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /var/www/html
 
 # Copiar código fuente al contenedor
-COPY . /var/www/html/
+COPY ../public /var/www/html/
+COPY ../app /var/www/html/app/
+COPY ../config /var/www/html/config/
+COPY ../database /var/www/html/database/
+COPY ../storage /var/www/html/storage/
 
 # Crear directorio de logs con permisos adecuados
-RUN mkdir -p /var/www/html/logs \
-    && chown -R www-data:www-data /var/www/html/logs \
-    && chmod -R 777 /var/www/html/logs
+RUN mkdir -p /var/www/html/storage/logs \
+    && chown -R www-data:www-data /var/www/html/storage/logs \
+    && chmod -R 777 /var/www/html/storage/logs
 
 # Configurar permisos para el directorio web
 RUN chown -R www-data:www-data /var/www/html \
